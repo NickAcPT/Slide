@@ -36,6 +36,10 @@ import me.ccrama.redditslide.Visuals.Palette;
 import me.ccrama.redditslide.util.LogUtil;
 import me.ccrama.redditslide.util.NetworkUtil;
 
+/**
+ * Created by carlo_000 on 5/4/2016.
+ * Split from ListViewWidgetService on 08/27/2020.
+ */
 public class ListViewRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
     String subreddit;
     int id;

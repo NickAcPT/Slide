@@ -9,6 +9,11 @@ import com.nostra13.universalimageloader.core.listener.ImageLoadingProgressListe
 
 import org.apache.commons.text.StringEscapeUtils;
 
+/**
+ * Created by carlo_000 on 10/19/2015.
+ * Split from ImageLoaderUtils on 08/27/2020.
+ */
+/*Adapted from https://github.com/Kennyc1012/Opengur */
 public class ImageLoaderUnescape extends ImageLoader {
 
     private volatile static ImageLoaderUnescape instance;

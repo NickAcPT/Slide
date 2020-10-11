@@ -41,7 +41,7 @@ import me.ccrama.redditslide.Activities.Website;
 import me.ccrama.redditslide.R;
 import me.ccrama.redditslide.Reddit;
 import me.ccrama.redditslide.SettingValues;
-import me.ccrama.redditslide.SubmissionViews.PopulateSubmissionViewHolder;
+import me.ccrama.redditslide.SubmissionViews.common.PopulateViewHolderCommon;
 
 import static me.ccrama.redditslide.Fragments.SettingsHandlingFragment.LinkHandlingMode;
 
@@ -141,7 +141,7 @@ public class LinkUtil {
             @Nullable Submission submission) {
         intent.putExtra(EXTRA_URL, url);
         if (adapterPosition != null && submission != null) {
-            PopulateSubmissionViewHolder.addAdaptorPosition(intent, submission, adapterPosition);
+            PopulateViewHolderCommon.addAdaptorPosition(intent, submission, adapterPosition);
         }
         intent.putExtra(EXTRA_COLOR, color);
         contextActivity.startActivity(intent);

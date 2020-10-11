@@ -97,9 +97,7 @@ import me.ccrama.redditslide.CommentCacheAsync;
 import me.ccrama.redditslide.ContentType;
 import me.ccrama.redditslide.DataShare;
 import me.ccrama.redditslide.ForceTouch.PeekViewActivity;
-import me.ccrama.redditslide.Fragments.SubmissionsView;
 import me.ccrama.redditslide.HasSeen;
-import me.ccrama.redditslide.Hidden;
 import me.ccrama.redditslide.LastComments;
 import me.ccrama.redditslide.OfflineSubreddit;
 import me.ccrama.redditslide.OpenRedditLink;
@@ -109,6 +107,7 @@ import me.ccrama.redditslide.ReadLater;
 import me.ccrama.redditslide.Reddit;
 import me.ccrama.redditslide.SettingValues;
 import me.ccrama.redditslide.SubmissionCache;
+import me.ccrama.redditslide.SubmissionViews.common.PopulateViewHolderCommon;
 import me.ccrama.redditslide.Toolbox.ToolboxUI;
 import me.ccrama.redditslide.UserSubscriptions;
 import me.ccrama.redditslide.Views.AnimateHelper;
@@ -173,7 +172,7 @@ public class PopulateSubmissionViewHolder {
                                         myIntent.putExtra(MediaView.SUBREDDIT,
                                                 submission.getSubredditName());
                                         myIntent.putExtra(MediaView.EXTRA_URL, submission.getUrl());
-                                        addAdaptorPosition(myIntent, submission,
+                                        PopulateViewHolderCommon.addAdaptorPosition(myIntent, submission,
                                                 holder.getAdapterPosition());
                                         contextActivity.startActivity(myIntent);
                                     } else {
@@ -231,7 +230,7 @@ public class PopulateSubmissionViewHolder {
                                         urlsBundle.putSerializable(RedditGallery.GALLERY_URLS, urls);
                                         i.putExtras(urlsBundle);
 
-                                        addAdaptorPosition(i, submission,
+                                        PopulateViewHolderCommon.addAdaptorPosition(i, submission,
                                                 holder.getAdapterPosition());
                                         contextActivity.startActivity(i);
                                         contextActivity.overridePendingTransition(R.anim.slideright,
@@ -266,7 +265,7 @@ public class PopulateSubmissionViewHolder {
                                         }
                                         i.putExtra(Album.EXTRA_URL, submission.getUrl());
 
-                                        addAdaptorPosition(i, submission,
+                                        PopulateViewHolderCommon.addAdaptorPosition(i, submission,
                                                 holder.getAdapterPosition());
                                         contextActivity.startActivity(i);
                                         contextActivity.overridePendingTransition(R.anim.slideright,
@@ -289,7 +288,7 @@ public class PopulateSubmissionViewHolder {
                                         }
                                         i.putExtra(Album.EXTRA_URL, submission.getUrl());
 
-                                        addAdaptorPosition(i, submission,
+                                        PopulateViewHolderCommon.addAdaptorPosition(i, submission,
                                                 holder.getAdapterPosition());
                                         contextActivity.startActivity(i);
                                         contextActivity.overridePendingTransition(R.anim.slideright,
@@ -379,7 +378,7 @@ public class PopulateSubmissionViewHolder {
                 }
             }
             myIntent.putExtra(MediaView.EXTRA_URL, url);
-            addAdaptorPosition(myIntent, submission, adapterPosition);
+            PopulateViewHolderCommon.addAdaptorPosition(myIntent, submission, adapterPosition);
             myIntent.putExtra(MediaView.EXTRA_SHARE_URL, submission.getUrl());
 
             contextActivity.startActivity(myIntent);
@@ -387,17 +386,6 @@ public class PopulateSubmissionViewHolder {
         } else {
             LinkUtil.openExternally(submission.getUrl());
         }
-
-    }
-
-    public static void addAdaptorPosition(Intent myIntent, Submission submission,
-            int adapterPosition) {
-        if (submission.getComments() == null && adapterPosition != -1) {
-            myIntent.putExtra(MediaView.ADAPTER_POSITION, adapterPosition);
-            myIntent.putExtra(MediaView.SUBMISSION_URL, submission.getPermalink());
-        }
-        SubmissionsView.currentPosition(adapterPosition);
-        SubmissionsView.currentSubmission(submission);
 
     }
 
@@ -515,7 +503,7 @@ public class PopulateSubmissionViewHolder {
                         .asText();
                 myIntent.putExtra(MediaView.EXTRA_DISPLAY_URL, previewUrl);
             }
-            addAdaptorPosition(myIntent, submission, adapterPosition);
+            PopulateViewHolderCommon.addAdaptorPosition(myIntent, submission, adapterPosition);
             contextActivity.startActivity(myIntent);
         } else {
             LinkUtil.openExternally(submission.getUrl());
@@ -833,7 +821,7 @@ public class PopulateSubmissionViewHolder {
                         saveSubmission(submission, mContext, holder, full);
                         break;
                     case 5: {
-                        hideSubmission(submission, posts, baseSub, recyclerview, mContext);
+                        PopulateViewHolderCommon.hideSubmission(submission, posts, baseSub, recyclerview, mContext);
                     }
                     break;
                     case 7:
@@ -937,7 +925,7 @@ public class PopulateSubmissionViewHolder {
                                                     .findViewById(reasonGroup.getCheckedRadioButtonId()))
                                                     .getText().toString();
                                         }
-                                        new AsyncReportTask(submission, holder.itemView)
+                                        new PopulateViewHolderCommon.AsyncReportTask(submission, holder.itemView)
                                                 .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, reportReason);
                                     }
                                 }).build();
@@ -1333,64 +1321,6 @@ public class PopulateSubmissionViewHolder {
                 }
             }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
-
-    public <T extends Contribution> void hideSubmission(final Submission submission,
-            final List<T> posts, final String baseSub, final RecyclerView recyclerview, Context c) {
-        final int pos = posts.indexOf(submission);
-        if (pos != -1) {
-            if (submission.isHidden()) {
-                posts.remove(pos);
-                Hidden.undoHidden(submission);
-                recyclerview.getAdapter().notifyItemRemoved(pos + 1);
-                Snackbar snack = Snackbar.make(recyclerview, R.string.submission_info_unhidden,
-                        Snackbar.LENGTH_LONG);
-                View view = snack.getView();
-                TextView tv = view.findViewById(com.google.android.material.R.id.snackbar_text);
-                tv.setTextColor(Color.WHITE);
-                snack.show();
-            } else {
-                final T t = posts.get(pos);
-                posts.remove(pos);
-                Hidden.setHidden(t);
-                final OfflineSubreddit s;
-                boolean success = false;
-                if (baseSub != null) {
-                    s = OfflineSubreddit.getSubreddit(baseSub, false, c);
-                    try {
-                        s.hide(pos);
-                        success = true;
-                    } catch (Exception e) {
-                    }
-                } else {
-                    success = false;
-                    s = null;
-                }
-
-                recyclerview.getAdapter().notifyItemRemoved(pos + 1);
-
-                final boolean finalSuccess = success;
-                Snackbar snack = Snackbar.make(recyclerview, R.string.submission_info_hidden,
-                        Snackbar.LENGTH_LONG)
-                        .setAction(R.string.btn_undo, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if (baseSub != null && s != null && finalSuccess) {
-                                    s.unhideLast();
-                                }
-                                posts.add(pos, t);
-                                recyclerview.getAdapter().notifyItemInserted(pos + 1);
-                                Hidden.undoHidden(t);
-
-                            }
-                        });
-                View view = snack.getView();
-                TextView tv = view.findViewById(com.google.android.material.R.id.snackbar_text);
-                tv.setTextColor(Color.WHITE);
-                snack.show();
-            }
-
-        }
     }
 
     public <T extends Contribution> void showModBottomSheet(final Activity mContext,
@@ -2753,7 +2683,7 @@ public class PopulateSubmissionViewHolder {
                 hideButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        hideSubmission(submission, posts, baseSub, recyclerview, mContext);
+                        PopulateViewHolderCommon.hideSubmission(submission, posts, baseSub, recyclerview, mContext);
                     }
                 });
             } else {
@@ -3600,42 +3530,6 @@ public class PopulateSubmissionViewHolder {
             } else {
                 holder.commentOverflow.setViews(blocks.subList(startIndex, blocks.size()),
                         subredditName);
-            }
-        }
-    }
-
-    public static class AsyncReportTask extends AsyncTask<String, Void, Void> {
-        private Submission submission;
-        private View contextView;
-
-        public AsyncReportTask(Submission submission, View contextView) {
-            this.submission = submission;
-            this.contextView = contextView;
-        }
-
-        @Override
-        protected Void doInBackground(String... reason) {
-            try {
-                new AccountManager(
-                        Authentication.reddit).report(submission, reason[0]);
-            } catch (ApiException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            if (contextView != null) {
-                try {
-                    Snackbar s = Snackbar.make(contextView, R.string.msg_report_sent, Snackbar.LENGTH_SHORT);
-                    View view = s.getView();
-                    TextView tv = view.findViewById(com.google.android.material.R.id.snackbar_text);
-                    tv.setTextColor(Color.WHITE);
-                    s.show();
-                } catch (Exception ignored) {
-
-                }
             }
         }
     }

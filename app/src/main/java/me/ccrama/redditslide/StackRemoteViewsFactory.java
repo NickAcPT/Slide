@@ -18,6 +18,10 @@ import java.util.List;
 import me.ccrama.redditslide.Adapters.SubredditPosts;
 import me.ccrama.redditslide.util.LogUtil;
 
+/**
+ * Created by ccrama on 10/2/2015.
+ * Split from StackWidgetService on 08/27/2020.
+ */
 public class StackRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
     private final Context mContext;
     private List<Submission> submissions = new ArrayList<>();
