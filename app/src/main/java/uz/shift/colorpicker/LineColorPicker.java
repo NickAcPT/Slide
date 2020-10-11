@@ -338,7 +338,7 @@ public class LineColorPicker extends View {
     /**
      * Set picker palette
      */
-    public void setColors(int[] colors) {
+    public void setColors(int... colors) {
         // TODO: selected color can be NOT in set of colors
         // FIXME: colors can be null
         this.colors = colors;

@@ -710,7 +710,7 @@ public class ToolboxUI {
          */
         public void execute(PublicContribution thing, int action, String removalReason, String pmSubject,
                 boolean modmail, boolean sticky, boolean lock, boolean log, String logTitle, String logSub,
-                String[] flair) {
+                String... flair) {
             super.execute(thing, action, removalReason, pmSubject, modmail, sticky, lock, log, logTitle, logSub, flair);
         }
     }

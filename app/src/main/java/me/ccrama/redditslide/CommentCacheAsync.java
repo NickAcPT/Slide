@@ -49,7 +49,7 @@ public class CommentCacheAsync extends AsyncTask {
     NotificationManager mNotifyManager;
 
     public CommentCacheAsync(List<Submission> submissions, Context c, String subreddit,
-            boolean[] otherChoices) {
+                             boolean... otherChoices) {
         alreadyReceived = submissions;
         this.context = c;
         this.subs = new String[]{subreddit};
@@ -58,11 +58,11 @@ public class CommentCacheAsync extends AsyncTask {
 
     public CommentCacheAsync(List<Submission> submissions, Activity mContext, String baseSub,
             String alternateSubName) {
-        this(submissions, mContext, baseSub, new boolean[]{true, true});
+        this(submissions, mContext, baseSub, true, true);
 
     }
 
-    public CommentCacheAsync(Context c, String[] subreddits) {
+    public CommentCacheAsync(Context c, String... subreddits) {
         this.context = c;
         this.subs = subreddits;
     }

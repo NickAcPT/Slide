@@ -87,7 +87,7 @@ public class CheckForMailSingle extends BroadcastReceiver {
 
                 //Intent for mark as read notification action
                 PendingIntent readPI = MarkAsReadService.getMarkAsReadIntent(2, c,
-                        new String[]{message.getFullName()});
+                        message.getFullName());
 
                 {
 
@@ -170,7 +170,7 @@ public class CheckForMailSingle extends BroadcastReceiver {
 
                     PendingIntent readPISingle = MarkAsReadService.getMarkAsReadIntent(
                             2 + (int) message.getCreated().getTime(), c,
-                            new String[]{message.getFullName()});
+                            message.getFullName());
 
                     NotificationCompat.Builder builder =
                             new NotificationCompat.Builder(c, Reddit.CHANNEL_MAIL).setContentIntent(

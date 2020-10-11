@@ -352,7 +352,7 @@ public class Usernotes {
             // for GSON
         }
 
-        public UsernotesConstants(String[] mods, String[] types) {
+        public UsernotesConstants(String[] mods, String... types) {
             this.mods = mods;
             this.types = types;
         }

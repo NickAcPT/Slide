@@ -203,7 +203,7 @@ public class CheckForMail extends BroadcastReceiver {
 
                         PendingIntent readPISingle = MarkAsReadService.getMarkAsReadIntent(
                                 2 + (int) m.getCreated().getTime(), c,
-                                new String[]{m.getFullName()});
+                                m.getFullName());
 
                         NotificationCompat.Builder builder = new NotificationCompat.Builder(c,
                                 Reddit.CHANNEL_MAIL).setContentIntent(openPi)

@@ -17,7 +17,7 @@ public class OfflineSubAdapter extends ArrayAdapter<String> {
 
     private Context mContext;
     public OfflineSubAdapter(Context context, int textViewResourceId,
-                            String[] objects) {
+                            String... objects) {
         super(context, textViewResourceId, objects);
 
         this.titles = objects;

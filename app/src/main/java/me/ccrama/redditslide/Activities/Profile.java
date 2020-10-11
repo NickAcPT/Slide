@@ -142,7 +142,7 @@ public class Profile extends BaseActivityAnim {
 
         pager = (ViewPager) findViewById(R.id.content_view);
         if (name.equals(Authentication.name))
-            setDataSet(new String[]{getString(R.string.profile_overview),
+            setDataSet(getString(R.string.profile_overview),
                     getString(R.string.profile_comments),
                     getString(R.string.profile_submitted),
                     getString(R.string.profile_gilded),
@@ -150,13 +150,12 @@ public class Profile extends BaseActivityAnim {
                     getString(R.string.profile_downvoted),
                     getString(R.string.profile_saved),
                     getString(R.string.profile_hidden),
-                    getString(R.string.profile_history)
-            });
+                    getString(R.string.profile_history));
 
-        else setDataSet(new String[]{getString(R.string.profile_overview),
+        else setDataSet(getString(R.string.profile_overview),
                 getString(R.string.profile_comments),
                 getString(R.string.profile_submitted),
-                getString(R.string.profile_gilded)});
+                getString(R.string.profile_gilded));
 
         new getProfile().execute(name);
 
@@ -259,7 +258,7 @@ public class Profile extends BaseActivityAnim {
         }
     }
 
-    private void setDataSet(String[] data) {
+    private void setDataSet(String... data) {
         usedArray = data;
         ProfilePagerAdapter adapter = new ProfilePagerAdapter(getSupportFragmentManager());
 
