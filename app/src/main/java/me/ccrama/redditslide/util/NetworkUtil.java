@@ -30,9 +30,8 @@ public class NetworkUtil {
     public static Status getConnectivityStatus(Context context) {
         ConnectivityManager cm = ContextCompat.getSystemService(context, ConnectivityManager.class);
 
-        assert cm != null;
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        switch (activeNetwork != null ? activeNetwork.getType() : CONST_NO_NETWORK) {
+        switch (cm != null && activeNetwork != null ? activeNetwork.getType() : CONST_NO_NETWORK) {
             case ConnectivityManager.TYPE_WIFI: case ConnectivityManager.TYPE_ETHERNET:
                 if (cm.isActiveNetworkMetered())
                     return Status.MOBILE; // respect metered wifi networks as mobile

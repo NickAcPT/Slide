@@ -25,7 +25,7 @@ public class LoadPhotosCommon {
         for (Submission submission : submissions) {
             String url;
             ContentType.Type type = ContentType.getContentType(submission);
-            if (submission.getThumbnails() != null) {
+            if (c != null && submission.getThumbnails() != null) {
 
                 if (type == ContentType.Type.IMAGE
                         || type == ContentType.Type.SELF
