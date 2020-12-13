@@ -86,6 +86,7 @@ import me.ccrama.redditslide.Activities.PostReadLater;
 import me.ccrama.redditslide.Activities.Profile;
 import me.ccrama.redditslide.Activities.Reauthenticate;
 import me.ccrama.redditslide.Activities.RedditGallery;
+import me.ccrama.redditslide.Activities.RedditGalleryPager;
 import me.ccrama.redditslide.Activities.Search;
 import me.ccrama.redditslide.Activities.SubredditView;
 import me.ccrama.redditslide.Activities.Tumblr;
@@ -122,6 +123,8 @@ import me.ccrama.redditslide.util.LinkUtil;
 import me.ccrama.redditslide.util.NetworkUtil;
 import me.ccrama.redditslide.util.OnSingleClickListener;
 import me.ccrama.redditslide.util.SubmissionParser;
+
+import static me.ccrama.redditslide.Notifications.ImageDownloadNotificationService.EXTRA_SUBMISSION_TITLE;
 
 /**
  * Created by ccrama on 9/19/2015.
@@ -173,6 +176,7 @@ public class PopulateSubmissionViewHolder {
                                         myIntent.putExtra(MediaView.SUBREDDIT,
                                                 submission.getSubredditName());
                                         myIntent.putExtra(MediaView.EXTRA_URL, submission.getUrl());
+                                        myIntent.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
                                         addAdaptorPosition(myIntent, submission,
                                                 holder.getAdapterPosition());
                                         contextActivity.startActivity(myIntent);
@@ -208,7 +212,19 @@ public class PopulateSubmissionViewHolder {
                                     break;
                                 case REDDIT_GALLERY:
                                     if (SettingValues.album) {
-                                        Intent i = new Intent(contextActivity, RedditGallery.class);
+                                        Intent i;
+                                        if (SettingValues.albumSwipe) {
+                                            i = new Intent(contextActivity, RedditGalleryPager.class);
+                                            i.putExtra(AlbumPager.SUBREDDIT,
+                                                    submission.getSubredditName());
+                                            i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
+                                        } else {
+                                            i = new Intent(contextActivity, RedditGallery.class);
+                                            i.putExtra(Album.SUBREDDIT,
+                                                    submission.getSubredditName());
+                                            i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
+                                        }
+
                                         i.putExtra(RedditGallery.SUBREDDIT,
                                                 submission.getSubredditName());
 
@@ -221,6 +237,17 @@ public class PopulateSubmissionViewHolder {
                                                         "media_metadata")
                                                         .has(identifier.get("media_id").asText())) {
                                                     urls.add(new GalleryImage(dataNode.get("media_metadata")
+                                                            .get(identifier.get("media_id").asText())
+                                                            .get("s")));
+                                                }
+                                            }
+                                        } else if (dataNode.has("crosspost_parent_list")) { //Else, try getting crosspost gallery data
+                                            JsonNode crosspost_parent = dataNode.get("crosspost_parent_list").get(0);
+                                            for (JsonNode identifier : crosspost_parent.get("gallery_data").get("items")) {
+                                                if (crosspost_parent.has("media_metadata") && crosspost_parent.get(
+                                                        "media_metadata")
+                                                        .has(identifier.get("media_id").asText())) {
+                                                    urls.add(new GalleryImage(crosspost_parent.get("media_metadata")
                                                             .get(identifier.get("media_id").asText())
                                                             .get("s")));
                                                 }
@@ -259,10 +286,12 @@ public class PopulateSubmissionViewHolder {
                                             i = new Intent(contextActivity, AlbumPager.class);
                                             i.putExtra(AlbumPager.SUBREDDIT,
                                                     submission.getSubredditName());
+                                            i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
                                         } else {
                                             i = new Intent(contextActivity, Album.class);
                                             i.putExtra(Album.SUBREDDIT,
                                                     submission.getSubredditName());
+                                            i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
                                         }
                                         i.putExtra(Album.EXTRA_URL, submission.getUrl());
 
@@ -347,6 +376,7 @@ public class PopulateSubmissionViewHolder {
         if (SettingValues.image) {
             Intent myIntent = new Intent(contextActivity, MediaView.class);
             myIntent.putExtra(MediaView.SUBREDDIT, submission.getSubredditName());
+            myIntent.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
             String previewUrl;
             String url = submission.getUrl();
 
@@ -408,6 +438,7 @@ public class PopulateSubmissionViewHolder {
 
             Intent myIntent = new Intent(contextActivity, MediaView.class);
             myIntent.putExtra(MediaView.SUBREDDIT, submission.getSubredditName());
+            myIntent.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
 
             GifUtils.AsyncLoadGif.VideoType t =
                     GifUtils.AsyncLoadGif.getVideoType(submission.getUrl());

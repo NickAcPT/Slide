@@ -37,6 +37,8 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.cocosw.bottomsheet.BottomSheet;
+import com.davemorrissey.labs.subscaleview.decoder.CompatDecoderFactory;
+import com.davemorrissey.labs.subscaleview.decoder.SkiaImageDecoder;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -82,6 +84,7 @@ import me.ccrama.redditslide.util.NetworkUtil;
 import me.ccrama.redditslide.util.ShareUtil;
 
 import static me.ccrama.redditslide.Activities.AlbumPager.readableFileSize;
+import static me.ccrama.redditslide.Notifications.ImageDownloadNotificationService.*;
 
 
 /**
@@ -99,6 +102,8 @@ public class MediaView extends FullScreenActivity
 
     public static String   fileLoc;
     public        String   subreddit;
+    private       String   submissionTitle;
+    private       int      index;
     public static Runnable doOnClick;
     public static boolean  didLoadGif;
 
@@ -324,6 +329,8 @@ public class MediaView extends FullScreenActivity
                 //always download the original file, or use the cached original if that is currently displayed
                 i.putExtra("actuallyLoaded", contentUrl);
                 if (subreddit != null && !subreddit.isEmpty()) i.putExtra("subreddit", subreddit);
+                if (submissionTitle != null) i.putExtra(EXTRA_SUBMISSION_TITLE, submissionTitle);
+                i.putExtra("index", index);
                 startService(i);
             }
         } else {
@@ -664,6 +671,10 @@ public class MediaView extends FullScreenActivity
         if (getIntent().hasExtra(SUBREDDIT)) {
             subreddit = getIntent().getExtras().getString(SUBREDDIT);
         }
+        if (getIntent().hasExtra(EXTRA_SUBMISSION_TITLE)) {
+            submissionTitle = getIntent().getExtras().getString(EXTRA_SUBMISSION_TITLE);
+        }
+        index = getIntent().getIntExtra("index", -1);
         findViewById(R.id.mute).setVisibility(View.GONE);
 
         if (getIntent().hasExtra(EXTRA_LQ)) {
@@ -1366,6 +1377,8 @@ public class MediaView extends FullScreenActivity
                 i.putExtra("actuallyLoaded", contentUrl);
                 i.putExtra("saveToLocation", folder.getAbsolutePath());
                 if (subreddit != null && !subreddit.isEmpty()) i.putExtra("subreddit", subreddit);
+                if (submissionTitle != null) i.putExtra(EXTRA_SUBMISSION_TITLE, submissionTitle);
+                i.putExtra("index", index);
                 startService(i);
             } else {
                 Reddit.appRestart.edit().putString("imagelocation", folder.getAbsolutePath()).apply();

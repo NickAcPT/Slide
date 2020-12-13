@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -278,7 +279,7 @@ public class GifUtils {
                                 return true;
                             } else if (audioUri != null && videoUri != null) {
                                 if (mux(new File(a.getCacheDir().getAbsolutePath(), "video.mp4").getAbsolutePath(),
-                                        new File(a.getCacheDir().getAbsolutePath(), "video.mp4").getAbsolutePath(),
+                                        new File(a.getCacheDir().getAbsolutePath(), "audio.mp4").getAbsolutePath(),
                                         new File(a.getCacheDir().getAbsolutePath(), "muxed.mp4").getAbsolutePath())) {
                                     in = new FileInputStream(new File(a.getCacheDir().getAbsolutePath(), "muxed.mp4"));
                                 } else {
@@ -473,6 +474,33 @@ public class GifUtils {
             return VideoType.OTHER;
         }
 
+      /**
+       * Get an API response for a given host and gfy name
+       *
+       * @param host the host to send the req to
+       * @param name the name of the gfy
+       * @return the result
+       */
+        JsonObject getApiResponse(String host, String name){
+          String gfycatUrl = "https://api." + host + ".com/v1/gfycats" + name;
+          return HttpUtil.getJsonObject(client, gson, gfycatUrl);
+        }
+
+       /**
+        * Get the correct mp4/mobile url from a given result JsonObject
+        *
+        * @param result the result to check
+        * @return the video url
+        */
+        String getUrlFromApi(JsonObject result){
+          if (result.getAsJsonObject("gfyItem").has("mobileUrl")) {
+            return result.getAsJsonObject("gfyItem").get("mobileUrl").getAsString();
+          } else {
+            return result.getAsJsonObject("gfyItem").get("mp4Url").getAsString();
+          }
+        }
+
+
         OkHttpClient client = Reddit.client;
 
         /**
@@ -493,14 +521,13 @@ public class GifUtils {
             if (name.contains("-")) {
                 name = name.split("-")[0];
             }
-            String gfycatUrl = "https://api." + host + ".com/v1/gfycats" + name;
-            final JsonObject result = HttpUtil.getJsonObject(client, gson, gfycatUrl);
-            String obj;
+            final JsonObject result = getApiResponse(host, name);
             if (result == null || result.get("gfyItem") == null || result.getAsJsonObject("gfyItem")
                     .get("mp4Url")
                     .isJsonNull()) {
                 //If the result null, the gfycat link may be redirecting to gifdeliverynetwork which is powered by redgifs.
-                //Try getting the redirected url from gfycat and check if redirected url is gifdeliverynetwork and return the url
+                //Try getting the redirected url from gfycat and check if redirected url is gifdeliverynetwork and if it is,
+                // we fetch the actual .mp4/.webm url from the redgifs api
                 if (result == null) {
                     try {
                         URL newUrl = new URL(fullUrl);
@@ -508,7 +535,7 @@ public class GifUtils {
                         ucon.setInstanceFollowRedirects(false);
                         String secondURL = new URL(ucon.getHeaderField("location")).toString();
                         if (secondURL.contains("gifdeliverynetwork")){
-                            return Uri.parse(secondURL);
+                            return Uri.parse(getUrlFromApi(getApiResponse("redgifs", name)));
                         }
 
                     } catch (IOException e) {
@@ -550,14 +577,9 @@ public class GifUtils {
                 }
 
                 return null;
-            } else {
-                if (result.getAsJsonObject("gfyItem").has("mobileUrl")) {
-                    obj = result.getAsJsonObject("gfyItem").get("mobileUrl").getAsString();
-                } else {
-                    obj = result.getAsJsonObject("gfyItem").get("mp4Url").getAsString();
-                }
             }
-            return Uri.parse(obj);
+
+            return Uri.parse(getUrlFromApi(result));
         }
 
         /*Loads a direct MP4, used for DASH mp4 or direct/imgur videos, currently unused
@@ -1049,14 +1071,12 @@ public class GifUtils {
      * @return Whether the muxing completed successfully
      */
     private static boolean mux(String videoFile, String audioFile, String outputFile) {
-        Movie video;
+        Movie rawVideo;
+
         try {
             new MovieCreator();
-            video = MovieCreator.build(videoFile);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return false;
-        } catch (IOException e) {
+            rawVideo = MovieCreator.build(videoFile);
+        } catch (RuntimeException | IOException e) {
             e.printStackTrace();
             return false;
         }
@@ -1065,18 +1085,20 @@ public class GifUtils {
         try {
             new MovieCreator();
             audio = MovieCreator.build(audioFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        } catch (NullPointerException e) {
+        } catch (IOException | NullPointerException e) {
             e.printStackTrace();
             return false;
         }
 
         Track audioTrack = audio.getTracks().get(0);
+        Track videoTrack = rawVideo.getTracks().get(0);
+        Movie video = new Movie();
 
-        ClippedTrack croppedTrack = new ClippedTrack(audioTrack, 0, audioTrack.getSamples().size());
-        video.addTrack(croppedTrack);
+        ClippedTrack croppedTrackAudio = new ClippedTrack(audioTrack, 0, audioTrack.getSamples().size());
+        video.addTrack(croppedTrackAudio);
+        ClippedTrack croppedTrackVideo = new ClippedTrack(videoTrack, 0, videoTrack.getSamples().size());
+        video.addTrack(croppedTrackVideo);
+
         Container out = new DefaultMp4Builder().build(video);
 
         FileOutputStream fos;

@@ -59,6 +59,8 @@ public class SettingValues {
     public static final String PREF_DRAFTS                    = "drafts";
     public static final String PREF_SUBREDDIT_FILTERS         = "subredditFilters";
     public static final String PREF_ABBREVIATE_SCORES         = "abbreviateScores";
+    public static final String PREF_HIDE_POST_AWARDS          = "hidePostAwards";
+    public static final String PREF_HIDE_COMMENT_AWARDS       = "hideCommentAwards";
     public static final String PREF_FLAIR_FILTERS             = "subFlairFilters";
     public static final String PREF_COMMENT_LAST_VISIT        = "commentLastVisit";
     public static final String PREF_VOTES_INFO_LINE           = "votesInfoLine";
@@ -136,6 +138,7 @@ public class SettingValues {
     public static final String PREF_MOD_TOOLBOX_LOCK       = "toolboxLock";
     public static final String PREF_MOD_TOOLBOX_MODMAIL    = "toolboxModmail";
     public static final String PREF_ALWAYS_SHOW_FAB        = "alwaysShowFAB";
+    public static final String PREF_HIGH_COLORSPACE_IMAGES = "highMemoryImages";
 
     public static CreateCardView.CardEnum defaultCardView;
     public static Sorting                 defaultSorting;
@@ -195,6 +198,8 @@ public class SettingValues {
     public static boolean collapseDeletedComments;
     public static boolean rightHandedCommentMenu;
     public static boolean abbreviateScores;
+    public static boolean hidePostAwards;
+    public static boolean hideCommentAwards;
     public static boolean shareLongLink;
     public static boolean isMuted;
     public static int     subredditSearchMethod;
@@ -219,6 +224,7 @@ public class SettingValues {
     public static boolean loadImageLq;
     public static boolean ignoreSubSetting;
     public static boolean hideNSFWCollection;
+    public static boolean highColorspaceImages;
 
     public static boolean fastscroll;
     public static boolean fab     = true;
@@ -355,10 +361,14 @@ public class SettingValues {
         lqMid = prefs.getBoolean(PREF_LQ_MID, true);
         lqHigh = prefs.getBoolean(PREF_LQ_HIGH, false);
         lqVideos = prefs.getBoolean(PREF_LQ_VIDEOS, true);
+        highColorspaceImages = prefs.getBoolean(PREF_HIGH_COLORSPACE_IMAGES, false);
 
         noImages = prefs.getBoolean(PREF_NO_IMAGES, false);
 
         abbreviateScores = prefs.getBoolean(PREF_ABBREVIATE_SCORES, true);
+
+        hidePostAwards = prefs.getBoolean(PREF_HIDE_POST_AWARDS, false);
+        hideCommentAwards = prefs.getBoolean(PREF_HIDE_COMMENT_AWARDS, false);
 
         lowResAlways = prefs.getBoolean(PREF_LOW_RES_ALWAYS, false);
         lowResMobile = prefs.getBoolean(PREF_LOW_RES_MOBILE, false);

@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,7 @@ import androidx.core.text.HtmlCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cocosw.bottomsheet.BottomSheet;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import net.dean.jraw.models.Submission;
 import net.dean.jraw.models.Thumbnails;
@@ -29,7 +31,10 @@ import me.ccrama.redditslide.Activities.AlbumPager;
 import me.ccrama.redditslide.Activities.CommentsScreen;
 import me.ccrama.redditslide.Activities.FullscreenVideo;
 import me.ccrama.redditslide.Activities.Gallery;
+import me.ccrama.redditslide.Activities.GalleryImage;
 import me.ccrama.redditslide.Activities.MediaView;
+import me.ccrama.redditslide.Activities.RedditGallery;
+import me.ccrama.redditslide.Activities.RedditGalleryPager;
 import me.ccrama.redditslide.Activities.Tumblr;
 import me.ccrama.redditslide.Activities.TumblrPager;
 import me.ccrama.redditslide.ContentType;
@@ -40,6 +45,8 @@ import me.ccrama.redditslide.SettingValues;
 import me.ccrama.redditslide.SubmissionViews.PopulateSubmissionViewHolder;
 import me.ccrama.redditslide.Visuals.Palette;
 import me.ccrama.redditslide.util.LinkUtil;
+
+import static me.ccrama.redditslide.Notifications.ImageDownloadNotificationService.EXTRA_SUBMISSION_TITLE;
 
 public class GalleryView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Gallery main;
@@ -90,6 +97,7 @@ public class GalleryView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             holder.type.setVisibility(View.VISIBLE);
             switch (ContentType.getContentType(submission)) {
+                case REDDIT_GALLERY:
                 case ALBUM:
                     holder.type.setImageResource(R.drawable.album);
                     break;
@@ -196,6 +204,7 @@ public class GalleryView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                     Intent myIntent = new Intent(main, MediaView.class);
                                     myIntent.putExtra(MediaView.SUBREDDIT, subreddit);
                                     myIntent.putExtra(MediaView.EXTRA_URL, submission.getUrl());
+                                    myIntent.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
                                     main.startActivity(myIntent);
                                 } else {
                                     LinkUtil.openExternally(submission.getUrl());
@@ -231,12 +240,14 @@ public class GalleryView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                     if (SettingValues.albumSwipe) {
                                         Intent i = new Intent(main, AlbumPager.class);
                                         i.putExtra(AlbumPager.SUBREDDIT, subreddit);
+                                        i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
                                         i.putExtra(Album.EXTRA_URL, submission.getUrl());
                                         main.startActivity(i);
                                     } else {
                                         Intent i = new Intent(main, Album.class);
                                         i.putExtra(Album.SUBREDDIT, subreddit);
                                         i.putExtra(Album.EXTRA_URL, submission.getUrl());
+                                        i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
                                         main.startActivity(i);
                                     }
                                 } else {
@@ -244,6 +255,49 @@ public class GalleryView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                                 }
                                 break;
+                            case REDDIT_GALLERY:
+                                if (SettingValues.album) {
+                                    Intent i;
+                                    if (SettingValues.albumSwipe) {
+                                        i = new Intent(main, RedditGalleryPager.class);
+                                        i.putExtra(AlbumPager.SUBREDDIT,
+                                                submission.getSubredditName());
+                                        i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
+                                    } else {
+                                        i = new Intent(main, RedditGallery.class);
+                                        i.putExtra(Album.SUBREDDIT,
+                                                submission.getSubredditName());
+                                        i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
+                                    }
+
+                                    i.putExtra(RedditGallery.SUBREDDIT,
+                                            submission.getSubredditName());
+
+                                    ArrayList<GalleryImage> urls = new ArrayList<>();
+
+                                    JsonNode dataNode = submission.getDataNode();
+                                    if (dataNode.has("gallery_data")) {
+                                        for (JsonNode identifier : dataNode.get("gallery_data").get("items")) {
+                                            if (dataNode.has("media_metadata") && dataNode.get(
+                                                    "media_metadata")
+                                                    .has(identifier.get("media_id").asText())) {
+                                                urls.add(new GalleryImage(dataNode.get("media_metadata")
+                                                        .get(identifier.get("media_id").asText())
+                                                        .get("s")));
+                                            }
+                                        }
+                                    }
+
+                                    Bundle urlsBundle = new Bundle();
+                                    urlsBundle.putSerializable(RedditGallery.GALLERY_URLS, urls);
+                                    i.putExtras(urlsBundle);
+
+                                    main.startActivity(i);
+                                } else {
+                                    LinkUtil.openExternally(submission.getUrl());
+                                }
+                                break;
+
                             case TUMBLR:
                                 if (SettingValues.image) {
                                     if (SettingValues.albumSwipe) {

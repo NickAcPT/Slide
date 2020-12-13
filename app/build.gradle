@@ -5,14 +5,15 @@ plugins {
 }
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     buildToolsVersion '29.0.3'
 
     defaultConfig {
         applicationId "me.ccrama.redditslide"
         minSdkVersion 16
-        targetSdkVersion 28
-        versionCode 326
+        //Change to 28 for F-Droid, need to add this to the scheme
+        targetSdkVersion 29
+        versionCode 334
         versionName androidGitVersion.name()
 
         multiDexEnabled true
@@ -78,10 +79,11 @@ dependencies {
 /** Custom **/
     implementation 'com.github.ccrama:JRAW:9a2494892d'
     implementation 'com.github.ccrama:TedBottomPicker:496623c9b6'
-    implementation 'com.github.ccrama:commonmark-java:07b304b575'
-    implementation 'com.github.ccrama:PeekAndPop:09adee29f1'
+    implementation 'com.github.ccrama.commonmark-java:commonmark:07b304b575'
+    implementation 'com.github.ccrama.commonmark-java:commonmark-ext-gfm-strikethrough:07b304b575'
+    implementation 'com.github.ccrama.commonmark-java:commonmark-ext-gfm-tables:07b304b575'
     implementation 'com.github.ccrama:JReadability:bb291880a5'
-    implementation 'com.github.Alexendoo:Android-RobotoTextView:f6d0eb5ac7'
+    implementation 'com.github.Alexendoo.Android-RobotoTextView:robototextview:f6d0eb5ac7'
 
 /** AndroidX **/
     implementation 'androidx.appcompat:appcompat:1.2.0'
@@ -93,13 +95,13 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
 
 /** Third-party (Other) **/
-    def exoPlayerVersion = '2.12.0'
+    def exoPlayerVersion = '2.12.1'
     implementation "com.google.android.exoplayer:exoplayer-core:$exoPlayerVersion"
     implementation "com.google.android.exoplayer:exoplayer-dash:$exoPlayerVersion"
     implementation "com.google.android.exoplayer:exoplayer-ui:$exoPlayerVersion"
     implementation "com.google.android.exoplayer:extension-okhttp:$exoPlayerVersion"
 
-    implementation 'com.google.guava:guava:29.0-android'
+    implementation 'com.google.guava:guava:30.0-android'
     //Updating material-dialogs to any newer version will break all AlertDialogWrapper
     //noinspection GradleDependency
     implementation 'com.afollestad.material-dialogs:commons:0.8.6.2' //0.9.6.0
@@ -132,7 +134,7 @@ dependencies {
     implementation 'org.mp4parser:muxer:1.9.41'
 
 /** Testing **/
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testImplementation 'org.robolectric:robolectric:4.4'
     testImplementation 'org.powermock:powermock-module-junit4:2.0.7'

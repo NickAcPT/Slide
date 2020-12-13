@@ -20,6 +20,9 @@ import android.widget.ProgressBar;
 import androidx.fragment.app.Fragment;
 
 import com.afollestad.materialdialogs.AlertDialogWrapper;
+import com.davemorrissey.labs.subscaleview.decoder.CompatDecoderFactory;
+import com.davemorrissey.labs.subscaleview.decoder.SkiaImageDecoder;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -39,12 +42,16 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 
 import me.ccrama.redditslide.Activities.Album;
 import me.ccrama.redditslide.Activities.AlbumPager;
 import me.ccrama.redditslide.Activities.CommentsScreen;
 import me.ccrama.redditslide.Activities.FullscreenVideo;
+import me.ccrama.redditslide.Activities.GalleryImage;
 import me.ccrama.redditslide.Activities.MediaView;
+import me.ccrama.redditslide.Activities.RedditGallery;
+import me.ccrama.redditslide.Activities.RedditGalleryPager;
 import me.ccrama.redditslide.Activities.Shadowbox;
 import me.ccrama.redditslide.Activities.Tumblr;
 import me.ccrama.redditslide.Activities.TumblrPager;
@@ -66,6 +73,8 @@ import me.ccrama.redditslide.util.LinkUtil;
 import me.ccrama.redditslide.util.LogUtil;
 import me.ccrama.redditslide.util.NetworkUtil;
 import okhttp3.OkHttpClient;
+
+import static me.ccrama.redditslide.Notifications.ImageDownloadNotificationService.EXTRA_SUBMISSION_TITLE;
 
 
 /**
@@ -144,12 +153,14 @@ public class MediaFragment extends Fragment {
         }
 
         PopulateShadowboxInfo.doActionbar(s, rootView, getActivity(), true);
+        View thumbnailView =  (rootView.findViewById(R.id.thumbimage2));
 
-        (rootView.findViewById(R.id.thumbimage2)).setVisibility(View.GONE);
+        thumbnailView.setVisibility(View.GONE);
 
         ImageView typeImage = rootView.findViewById(R.id.type);
         typeImage.setVisibility(View.VISIBLE);
         SubsamplingScaleImageView img = rootView.findViewById(R.id.submission_image);
+
         final SlidingUpPanelLayout slideLayout = rootView.findViewById(R.id.sliding_layout);
         ContentType.Type type = ContentType.getContentType(s);
 
@@ -165,26 +176,27 @@ public class MediaFragment extends Fragment {
         if (Strings.isNullOrEmpty(s.getThumbnail())
                 || Strings.isNullOrEmpty(firstUrl)
                 || (s.isNsfw() && SettingValues.getIsNSFWEnabled())) {
-            (rootView.findViewById(R.id.thumbimage2)).setVisibility(View.VISIBLE);
-            ((ImageView) rootView.findViewById(R.id.thumbimage2)).setImageResource(R.drawable.web);
-            addClickFunctions((rootView.findViewById(R.id.thumbimage2)), slideLayout, rootView,
+            thumbnailView.setVisibility(View.VISIBLE);
+            ((ImageView) thumbnailView).setImageResource(R.drawable.web);
+            addClickFunctions(thumbnailView, slideLayout, rootView,
+                    type, getActivity(), s);
+            addClickFunctions(typeImage, slideLayout, rootView,
                     type, getActivity(), s);
             (rootView.findViewById(R.id.progress)).setVisibility(View.GONE);
 
             if ((s.isNsfw() && SettingValues.getIsNSFWEnabled())) {
-                ((ImageView) rootView.findViewById(R.id.thumbimage2)).setImageResource(
+                ((ImageView) thumbnailView).setImageResource(
                         R.drawable.nsfw);
             } else {
                 if (Strings.isNullOrEmpty(firstUrl) && !Strings.isNullOrEmpty(s.getThumbnail())) {
                     ((Reddit) getContext().getApplicationContext()).getImageLoader()
                             .displayImage(s.getThumbnail(),
-                                    ((ImageView) rootView.findViewById(R.id.thumbimage2)));
+                                    ((ImageView) thumbnailView));
                 }
             }
 
         } else {
-
-            (rootView.findViewById(R.id.thumbimage2)).setVisibility(View.GONE);
+            thumbnailView.setVisibility(View.GONE);
             addClickFunctions(img, slideLayout, rootView, type, getActivity(), s);
         }
 
@@ -200,6 +212,7 @@ public class MediaFragment extends Fragment {
 
         switch (type) {
             case ALBUM:
+            case REDDIT_GALLERY:
                 typeImage.setImageResource(R.drawable.album);
                 break;
             case EXTERNAL:
@@ -385,13 +398,58 @@ public class MediaFragment extends Fragment {
                                     Intent i = new Intent(contextActivity, AlbumPager.class);
                                     i.putExtra(Album.EXTRA_URL, submission.getUrl());
                                     i.putExtra(AlbumPager.SUBREDDIT, submission.getSubredditName());
+                                    i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
                                     contextActivity.startActivity(i);
                                 } else {
                                     Intent i = new Intent(contextActivity, Album.class);
                                     i.putExtra(Album.EXTRA_URL, submission.getUrl());
                                     i.putExtra(Album.SUBREDDIT, submission.getSubredditName());
+                                    i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
                                     contextActivity.startActivity(i);
                                 }
+                            } else {
+                                LinkUtil.openExternally(submission.getUrl());
+                            }
+                            break;
+                        case REDDIT_GALLERY:
+                            if (SettingValues.album) {
+                                Intent i;
+                                if (SettingValues.albumSwipe) {
+                                    i = new Intent(contextActivity, RedditGalleryPager.class);
+                                    i.putExtra(AlbumPager.SUBREDDIT,
+                                            submission.getSubredditName());
+                                    i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
+                                } else {
+                                    i = new Intent(contextActivity, RedditGallery.class);
+                                    i.putExtra(Album.SUBREDDIT,
+                                            submission.getSubredditName());
+                                    i.putExtra(EXTRA_SUBMISSION_TITLE, submission.getTitle());
+                                }
+
+                                i.putExtra(RedditGallery.SUBREDDIT,
+                                        submission.getSubredditName());
+
+                                ArrayList<GalleryImage> urls = new ArrayList<>();
+
+                                JsonNode dataNode = submission.getDataNode();
+                                if (dataNode.has("gallery_data")) {
+                                    for (JsonNode identifier : dataNode.get("gallery_data").get("items")) {
+                                        if (dataNode.has("media_metadata") && dataNode.get(
+                                                "media_metadata")
+                                                .has(identifier.get("media_id").asText())) {
+                                            urls.add(new GalleryImage(dataNode.get("media_metadata")
+                                                    .get(identifier.get("media_id").asText())
+                                                    .get("s")));
+                                        }
+                                    }
+                                }
+
+                                Bundle urlsBundle = new Bundle();
+                                urlsBundle.putSerializable(RedditGallery.GALLERY_URLS, urls);
+                                LogUtil.v("Opening gallery with " + urls.size());
+                                i.putExtras(urlsBundle);
+
+                                contextActivity.startActivity(i);
                             } else {
                                 LinkUtil.openExternally(submission.getUrl());
                             }
