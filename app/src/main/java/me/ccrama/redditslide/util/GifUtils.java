@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -493,7 +492,7 @@ public class GifUtils {
         * @return the video url
         */
         String getUrlFromApi(JsonObject result){
-          if (result.getAsJsonObject("gfyItem").has("mobileUrl")) {
+          if (!SettingValues.hqgif && result.getAsJsonObject("gfyItem").has("mobileUrl")) {
             return result.getAsJsonObject("gfyItem").get("mobileUrl").getAsString();
           } else {
             return result.getAsJsonObject("gfyItem").get("mp4Url").getAsString();

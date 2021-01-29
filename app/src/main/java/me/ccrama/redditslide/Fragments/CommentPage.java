@@ -740,12 +740,8 @@ public class CommentPage extends Fragment implements Toolbar.OnMenuItemClickList
                     .show();
         }
 
-        if (!(getActivity() instanceof CommentsScreen)
-                || ((CommentsScreen) getActivity()).currentPage == page) {
-            doAdapter(true);
-        } else {
-            doAdapter(false);
-        }
+        doAdapter(!(getActivity() instanceof CommentsScreen)
+                || ((CommentsScreen) getActivity()).currentPage == page);
         return v;
     }
 
@@ -989,14 +985,13 @@ public class CommentPage extends Fragment implements Toolbar.OnMenuItemClickList
                                         i.putExtra(Album.EXTRA_URL,
                                                 adapter.submission.getUrl());
                                         i.putExtra(AlbumPager.SUBREDDIT, subreddit);
-                                        i.putExtra(EXTRA_SUBMISSION_TITLE, adapter.submission.getTitle());
                                     } else {
                                         i = new Intent(getActivity(), Album.class);
                                         i.putExtra(Album.EXTRA_URL,
                                                 adapter.submission.getUrl());
                                         i.putExtra(Album.SUBREDDIT, subreddit);
-                                        i.putExtra(EXTRA_SUBMISSION_TITLE, adapter.submission.getTitle());
                                     }
+                                    i.putExtra(EXTRA_SUBMISSION_TITLE, adapter.submission.getTitle());
                                     getActivity().startActivity(i);
                                     getActivity().overridePendingTransition(
                                             R.anim.slideright, R.anim.fade_out);
@@ -1925,8 +1920,9 @@ public class CommentPage extends Fragment implements Toolbar.OnMenuItemClickList
                 return 0;
             case CHILDREN:
                 return 1;
-            case TIME:
             case OP:
+                return 2;
+            case TIME:
                 return 3;
             case GILDED:
                 return 6;
